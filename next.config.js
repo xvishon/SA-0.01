@@ -2,9 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  // Remove the output: 'export' line
   images: {
-    domains: ['images.unsplash.com', 'source.unsplash.com'],
+    unoptimized: true,
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

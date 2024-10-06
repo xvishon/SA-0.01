@@ -57,4 +57,17 @@ body {
   background-attachment: fixed;
 }
 
+/* Ensure the main content doesn't overlap with the sidebar */
+.main-container {
+  transition: margin 0.3s ease-in-out;
+}
+
+.main-container.sidebar-open-left {
+  margin-left: 300px;
+}
+
+.main-container.sidebar-open-right {
+  margin-right: 300px;
+}
+
 /* ... rest of the file remains the same ... */

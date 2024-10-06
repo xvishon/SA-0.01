@@ -1,15 +1,23 @@
-"use client"
-
 import React from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Settings, RefreshCw, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Settings, RefreshCw, ChevronDown, AlertCircle } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const SettingsPopover: React.FC = () => {
-  const { pageWidth, setPageWidth, ollamaModel, setOllamaModel, refreshOllamaModels, isOllamaAvailable } = useSettings();
+  const { 
+    pageWidth, 
+    setPageWidth, 
+    ollamaModel, 
+    setOllamaModel, 
+    ollamaModels, 
+    refreshOllamaModels, 
+    isOllamaAvailable,
+    isLoadingModels,
+    ollamaError
+  } = useSettings();
 
   return (
     <Popover>
@@ -53,23 +61,37 @@ const SettingsPopover: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span>Model:</span>
-                <Select value={ollamaModel} onValueChange={setOllamaModel}>
+                <Select value={ollamaModel} onValueChange={setOllamaModel} disabled={!isOllamaAvailable || isLoadingModels}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Add Ollama model options here */}
+                    {ollamaModels.map((model) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={refreshOllamaModels} className="w-full">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Models
+              <Button 
+                onClick={refreshOllamaModels} 
+                className="w-full"
+                disabled={isLoadingModels}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingModels ? 'animate-spin' : ''}`} />
+                {isLoadingModels ? 'Loading...' : 'Refresh Models'}
               </Button>
               {!isOllamaAvailable && (
                 <p className="text-sm text-muted-foreground flex items-center">
                   <AlertCircle className="h-4 w-4 mr-2" />
                   Ollama is not available
+                </p>
+              )}
+              {ollamaError && (
+                <p className="text-sm text-red-500 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  {ollamaError}
                 </p>
               )}
             </div>

@@ -10,93 +10,104 @@ interface Book {
   updatedAt: Date;
 }
 
+interface CodexEntry {
+  id?: number;
+  bookId: number | null; // null for global entries
+  category: string;
+  name: string;
+  description: string;
+}
+
 interface MyDB extends DBSchema {
   books: {
     key: number;
     value: Book;
     indexes: { 'by-title': string };
   };
+  codexEntries: {
+    key: number;
+    value: CodexEntry;
+    indexes: { 'by-book': number, 'by-category': string };
+  };
 }
 
 const DB_NAME = 'alchemist-library';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const dbPromise = openDB<MyDB>(DB_NAME, DB_VERSION, {
-  upgrade(db) {
-    if (!db.objectStoreNames.contains('books')) {
-      console.log('initDB: Creating books object store');
+  upgrade(db, oldVersion, newVersion, transaction) {
+    if (oldVersion < 1) {
       const bookStore = db.createObjectStore('books', { keyPath: 'id', autoIncrement: true });
       bookStore.createIndex('by-title', 'title');
+    }
+    if (oldVersion < 2) {
+      const codexStore = db.createObjectStore('codexEntries', { keyPath: 'id', autoIncrement: true });
+      codexStore.createIndex('by-book', 'bookId');
+      codexStore.createIndex('by-category', 'category');
     }
   },
 });
 
+// Book-related functions
 export async function getAllBooks(): Promise<Book[]> {
-  console.log('getAllBooks: Starting...');
-  try {
-    const db = await dbPromise;
-    const books = await db.getAll('books');
-    console.log('getAllBooks: Fetched books', books);
-    return books;
-  } catch (error) {
-    console.error('getAllBooks: Error getting all books:', error);
-    return [];
-  }
+  const db = await dbPromise;
+  return db.getAll('books');
 }
 
 export async function getBookById(id: number): Promise<Book | undefined> {
-  console.log('getBookById: Starting...', id);
-  try {
-    const db = await dbPromise;
-    const book = await db.get('books', id);
-    console.log('getBookById: Fetched book', book);
-    return book;
-  } catch (error) {
-    console.error('getBookById: Error getting book:', error);
-    throw error;
-  }
+  const db = await dbPromise;
+  return db.get('books', id);
 }
 
 export async function createBook(book: Omit<Book, 'id'>): Promise<Book> {
-  console.log('createBook: Starting...', book);
-  try {
-    const db = await dbPromise;
-    const id = await db.add('books', {
-      ...book,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    const newBook = { ...book, id };
-    console.log('createBook: Book created', newBook);
-    return newBook;
-  } catch (error) {
-    console.error('createBook: Error creating book:', error);
-    throw error;
-  }
+  const db = await dbPromise;
+  const id = await db.add('books', {
+    ...book,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  return { ...book, id };
 }
 
-export async function updateBook(book: Book): Promise<Book> {
-  console.log('updateBook: Starting...', book);
-  try {
-    const db = await dbPromise;
-    const updatedBook = { ...book, updatedAt: new Date() };
-    await db.put('books', updatedBook);
-    console.log('updateBook: Book updated', updatedBook);
-    return updatedBook;
-  } catch (error) {
-    console.error('updateBook: Error updating book:', error);
-    throw error;
-  }
+export async function updateBook(book: Book): Promise<void> {
+  const db = await dbPromise;
+  const updatedBook = { ...book, updatedAt: new Date() };
+  await db.put('books', updatedBook);
 }
 
 export async function deleteBook(id: number): Promise<void> {
-  console.log('deleteBook: Starting...', id);
-  try {
-    const db = await dbPromise;
-    await db.delete('books', id);
-    console.log('deleteBook: Book deleted', id);
-  } catch (error) {
-    console.error('deleteBook: Error deleting book:', error);
-    throw error;
-  }
+  const db = await dbPromise;
+  await db.delete('books', id);
+}
+
+// Codex-related functions
+export async function getAllCodexEntries(): Promise<CodexEntry[]> {
+  const db = await dbPromise;
+  return db.getAll('codexEntries');
+}
+
+export async function getCodexEntriesByBook(bookId: number | null): Promise<CodexEntry[]> {
+  const db = await dbPromise;
+  return db.getAllFromIndex('codexEntries', 'by-book', bookId);
+}
+
+export async function getCodexEntriesByCategory(category: string): Promise<CodexEntry[]> {
+  const db = await dbPromise;
+  return db.getAllFromIndex('codexEntries', 'by-category', category);
+}
+
+export async function createCodexEntry(entry: Omit<CodexEntry, 'id'>): Promise<CodexEntry> {
+  const db = await dbPromise;
+  const id = await db.add('codexEntries', entry);
+  return { ...entry, id };
+}
+
+export async function updateCodexEntry(entry: CodexEntry): Promise<void> {
+  const db = await dbPromise;
+  await db.put('codexEntries', entry);
+}
+
+export async function deleteCodexEntry(id: number): Promise<void> {
+  const db = await dbPromise;
+  await db.delete('codexEntries', id);
 }

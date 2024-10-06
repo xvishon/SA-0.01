@@ -28,6 +28,17 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        gray: {
+          200: 'hsl(220, 20%, 80%)',
+          300: 'hsl(220, 20%, 70%)',
+          400: 'hsl(220, 20%, 60%)',
+          700: 'hsl(220, 20%, 30%)',
+          800: 'hsl(220, 20%, 20%)',
+        },
+        blue: {
+          600: 'hsl(220, 70%, 50%)',
+          700: 'hsl(220, 70%, 40%)',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -14,6 +14,14 @@ interface Book {
   updatedAt: Date;
 }
 
+interface CodexEntry {
+  id: number;
+  bookId: number | null; // null for global entries
+  category: string;
+  name: string;
+  description: string;
+}
+
 interface BookContextType {
   books: Book[];
   currentBook: Book | null;
@@ -23,6 +31,10 @@ interface BookContextType {
   deleteBook: (id: number) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  codexEntries: CodexEntry[];
+  addCodexEntry: (entry: Omit<CodexEntry, 'id'>) => Promise<CodexEntry>;
+  updateCodexEntry: (entry: CodexEntry) => Promise<void>;
+  deleteCodexEntry: (id: number) => Promise<void>;
 }
 
 const BookContext = createContext<BookContextType | undefined>(undefined);
@@ -47,9 +59,8 @@ const BookProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: books = [], isLoading, error } = useQuery<Book[], Error>(['books'], db.getAllBooks, {
-    onError: (error) => console.error('Error fetching books:', error),
-  });
+  const { data: books = [], isLoading: isBooksLoading, error: booksError } = useQuery<Book[], Error>(['books'], db.getAllBooks);
+  const { data: codexEntries = [], isLoading: isCodexLoading, error: codexError } = useQuery<CodexEntry[], Error>(['codexEntries'], db.getAllCodexEntries);
 
   const addBookMutation = useMutation(db.createBook, {
     onSuccess: () => {
@@ -66,6 +77,24 @@ const BookProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
   const deleteBookMutation = useMutation(db.deleteBook, {
     onSuccess: () => {
       queryClient.invalidateQueries(['books']);
+    },
+  });
+
+  const addCodexEntryMutation = useMutation(db.createCodexEntry, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['codexEntries']);
+    },
+  });
+
+  const updateCodexEntryMutation = useMutation(db.updateCodexEntry, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['codexEntries']);
+    },
+  });
+
+  const deleteCodexEntryMutation = useMutation(db.deleteCodexEntry, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['codexEntries']);
     },
   });
 
@@ -86,6 +115,19 @@ const BookProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
     await deleteBookMutation.mutateAsync(id);
   }, [deleteBookMutation]);
 
+  const addCodexEntry = useCallback(async (entry: Omit<CodexEntry, 'id'>): Promise<CodexEntry> => {
+    const newEntry = await addCodexEntryMutation.mutateAsync(entry);
+    return newEntry;
+  }, [addCodexEntryMutation]);
+
+  const updateCodexEntry = useCallback(async (entry: CodexEntry) => {
+    await updateCodexEntryMutation.mutateAsync(entry);
+  }, [updateCodexEntryMutation]);
+
+  const deleteCodexEntry = useCallback(async (id: number) => {
+    await deleteCodexEntryMutation.mutateAsync(id);
+  }, [deleteCodexEntryMutation]);
+
   const contextValue = useMemo(() => ({
     books,
     currentBook,
@@ -93,9 +135,13 @@ const BookProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
     addBook,
     updateBook,
     deleteBook,
-    isLoading,
-    error,
-  }), [books, currentBook, isLoading, error, addBook, updateBook, deleteBook]);
+    isLoading: isBooksLoading || isCodexLoading,
+    error: booksError || codexError,
+    codexEntries,
+    addCodexEntry,
+    updateCodexEntry,
+    deleteCodexEntry,
+  }), [books, currentBook, codexEntries, isBooksLoading, isCodexLoading, booksError, codexError, addBook, updateBook, deleteBook, addCodexEntry, updateCodexEntry, deleteCodexEntry]);
 
   return (
     <BookContext.Provider value={contextValue}>
