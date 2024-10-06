@@ -46,7 +46,10 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
 
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
-  }, []);
+    if (currentBook) {
+      setCurrentBook({ ...currentBook, content: newContent });
+    }
+  }, [currentBook, setCurrentBook]);
 
   const handleAddCodexEntry = useCallback((newEntry: Omit<CodexEntry, 'id'>) => {
     // Here you would typically call an API to add the entry to the database
@@ -80,7 +83,9 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
           onChange={(e) => setTitle(e.target.value)}
           className="text-2xl font-bold w-1/2"
         />
-        <div className="space-x-2">
+
+
+        <div className="flex items-center space-x-2">
           <Button onClick={handleSave}>
             <Save className="h-4 w-4 mr-2" />
             Save
@@ -92,19 +97,26 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
             </Button>
           </NewBookDialog>
         </div>
+      
+      
       </div>
       <TextEditor
         bookId={book.id!}
         initialContent={content}
         onContentChange={handleContentChange}
       />
+          
+     
       <CodexSidebar
         bookId={params.id}
         entries={codexEntries}
         onAddEntry={handleAddCodexEntry}
       />
     </div>
+
+
   );
 };
 
 export default React.memo(EditPageClient);
+
