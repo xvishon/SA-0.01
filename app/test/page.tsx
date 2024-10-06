@@ -35,7 +35,14 @@ export default function TestPage() {
         <div className="flex-grow ml-4">
           <div className="mt-4">
             <h2 className="text-2xl font-semibold mb-2">Main Content Area</h2>
-            <p>This is where the main content of your book would be displayed.</p>
+            <p>To do: 1. Make database save data and fetch from markdown files saved local.
+                      2. Codex features 
+                      3. TipTap
+                      4. Edit Database
+                      5. Shelves
+                      6. 
+
+            </p>
           </div>
         </div>
       </div>
