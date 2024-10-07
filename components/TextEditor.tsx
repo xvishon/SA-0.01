@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { debounce } from 'lodash';
 import { Bold, Italic, Strikethrough, Eraser } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
-
+import OllamaIntegration from './OllamaIntegration';
 interface TextEditorProps {
   bookId: number;
   initialContent: string;
@@ -18,6 +18,33 @@ interface TextEditorProps {
 const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onContentChange }) => {
   const [content, setContent] = useState(initialContent);
   const { isOllamaAvailable } = useSettings();
+//ai cont
+const handleAIContinue = async (model: string) => {
+  if (editor) {
+    const currentContent = editor.getText();
+    try {
+      const response = await fetch('/api/ollama', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          prompt: currentContent,
+          stream: false,
+        }),
+      });
+      const data = await response.json();
+      if (data.response) {
+        editor.commands.setContent(currentContent + ' ' + data.response);
+        setContent(editor.getHTML());
+      }
+    } catch (error) {
+      console.error('Error generating content with Ollama:', error);
+    }
+  }
+};
+
 
   // Update local content and notify parent component on change
   const handleContentUpdate = useCallback(
@@ -94,7 +121,11 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
           <Button onClick={() => editor.chain().focus().unsetAllMarks().run()}>
             <Eraser className="h-4 w-4" />
           </Button>
+
+
+         
         </div>
+        <OllamaIntegration onContinue={handleAIContinue} />
       </div>
     </div>
   );

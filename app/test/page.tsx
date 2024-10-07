@@ -35,14 +35,26 @@ export default function TestPage() {
         <div className="flex-grow ml-4">
           <div className="mt-4">
             <h2 className="text-2xl font-semibold mb-2">Main Content Area</h2>
-            <p>To do: 1. Make database save data and fetch from markdown files saved local.
-                      2. Codex features 
-                      3. TipTap
-                      4. Edit Database
-                      5. Shelves
-                      6. 
-
-            </p>
+            <ul>
+              <li>Make database save data and fetch from markdown files saved locally.</li>
+              <li>Implement Codex features:
+                <ul>
+                  <li>Search functionality</li>
+                  <li>Filtering by category</li>
+                  <li>Sorting options (alphabetical, date created, etc.)</li>
+                </ul>
+              </li>
+              <li>Integrate TipTap editor for rich text editing experience within codex entries.</li>
+              <li>Develop an interface for editing and managing the database content.</li>
+              <li>Implement a "Shelves" feature to allow users to organize entries into custom collections.</li>
+              <li>Improve UI/UX:
+                <ul>
+                  <li>Implement drag-and-drop functionality for reordering entries.</li>
+                  <li>Enhance the visual design and layout of the Codex.</li>
+                  <li>Add loading states and error handling for a smoother user experience.</li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
