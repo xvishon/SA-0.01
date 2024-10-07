@@ -15,7 +15,7 @@
     "incremental": true,
     "baseUrl": ".",  // Ensure this is set to the root of your project
     "paths": {
-      "@/*": ["*"]  // Ensure that this points correctly to your 'src' folder
+      "@/*": ["./*"]  // Ensure that this points correctly to your 'src' folder
     },
     "plugins": [
       {

@@ -1,10 +1,8 @@
-"use client"
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, AlertCircle } from 'lucide-react';
-import { useSettings } from '@/contexts/SettingsContext';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RefreshCw, AlertCircle } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface OllamaIntegrationProps {
   onContinue: (model: string, prompt: string) => void;
@@ -27,6 +25,8 @@ const OllamaIntegration: React.FC<OllamaIntegrationProps> = ({ onContinue, conte
       try {
         const prompt = `Continue the following text:\n\n${content}\n\nContinuation:`;
         await onContinue(ollamaModel, prompt);
+      } catch (error) {
+        // Handle error here if needed
       } finally {
         setIsLoading(false);
       }

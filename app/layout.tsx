@@ -47,7 +47,7 @@ export default function RootLayout({
                     </div>
                   </main>
                   <footer className="text-center py-4 text-muted-foreground">
-                    © 2023 Story Alchemist. All rights reserved.
+                    © 2024 Story Alchemist. All rights reserved.
                   </footer>
                 </div>
               </ErrorBoundary>
