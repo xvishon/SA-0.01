@@ -1,8 +1,12 @@
 # SA-0.01
 A Story Tool
 
+Use:
 
-
+```
+npm install
+npm run dev
+```
 
 
 
