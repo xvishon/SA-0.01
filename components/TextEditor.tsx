@@ -1,3 +1,5 @@
+components\TextEditor.tsx
+@@ -1,175 +1,176 @@
 'use client';
 
 import React, { useEffect, useMemo } from 'react';
@@ -172,4 +174,4 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
       {/* Your JSX structure here */}
   );
 
-export default React.memo(TextEditor);
+  export default React.memo(TextEditor);
