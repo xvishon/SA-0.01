@@ -1,9 +1,9 @@
-"use client";
-import React from 'react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+'use client';
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button'; // Ensure this exists
+import { Input } from '@/components/ui/input'; // Ensure this exists
+import { Label } from '@/components/ui/label'; // Ensure this exists
 import {
   Dialog,
   DialogContent,
@@ -12,33 +12,33 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { useBookContext } from '@/contexts/BookContext';
+} from '@/components/ui/dialog'; // Ensure this exists
+import { useBookContext } from '@/contexts/BookContext'; // Ensure this exists
 
-export default function NewBookDialog() {
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [coverUrl, setCoverUrl] = useState('');
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { addBook } = useBookContext();
+const NewBookDialog: React.FC = () => {
+  const [title, setTitle] = useState<string>(''); // Track new book title
+  const [author, setAuthor] = useState<string>(''); // Track author name
+  const [coverUrl, setCoverUrl] = useState<string>(''); // Track cover URL
+  const [open, setOpen] = useState<boolean>(false); // Manage dialog open state
+  const [loading, setLoading] = useState<boolean>(false); // Loading state for book creation
+  const [error, setError] = useState<string | null>(null); // Track any errors
+  const { addBook } = useBookContext(); // Access the book context to add a new book
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true); // Set loading to true during submission
+    setError(null); // Clear any existing errors
 
     try {
-      await addBook({ title, author, coverUrl, content: '' });
-      setTitle('');
+      await addBook({ title, author, coverUrl, content: '' }); // Add book to the context
+      setTitle(''); // Clear form fields
       setAuthor('');
       setCoverUrl('');
-      setOpen(false);
+      setOpen(false); // Close dialog after successful submission
     } catch (err) {
-      setError('Failed to add the book. Please try again.');
+      setError('Failed to add the book. Please try again.'); // Handle errors
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading state
     }
   };
 
@@ -103,4 +103,6 @@ export default function NewBookDialog() {
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default NewBookDialog;

@@ -1,5 +1,4 @@
-'use client'
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,16 +7,9 @@ import { ChevronLeft, ChevronRight, Search, X, Plus, ArrowLeftRight, Filter } fr
 import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe } from 'react-icons/fa';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CategoryPopup from './CategoryPopup';
-import { CodexEntry } from '@/types/types';
+import { CodexSidebarProps } from '@/types/types';
 
-interface CodexSidebarProps {
-  bookId: string;
-  entries: CodexEntry[];
-  onAddEntry: (entry: Omit<CodexEntry, 'id'>) => void;
-}
-
-const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry }) => {
-  const [isOpen, setIsOpen] = useState(true);
+const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, entries = [], onAddEntry }) => {
   const [position, setPosition] = useState<'left' | 'right'>('right');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -33,17 +25,30 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
     { name: 'World Building', icon: FaGlobe },
   ];
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-
   const togglePosition = () => {
     setPosition(position === 'left' ? 'right' : 'left');
   };
 
-  const filteredEntries = entries.filter(entry => 
+  const filteredEntries = entries.filter(entry =>
     (entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.content.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      entry.content.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (selectedCategory === 'all' || entry.category === selectedCategory)
   );
+
+  const handleAddEntry = (entry: { category: string; title: string; content: string }) => {
+    onAddEntry({
+      category: entry.category,
+      title: entry.title,
+      content: entry.content,
+      name: entry.title, // Providing name
+      description: entry.content.substring(0, 50), // Providing description as first 50 characters of content
+    });
+  };
+
+  // Implement the onClose logic to properly close the popup
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
 
   return (
     <>
@@ -63,7 +68,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
               <Button variant="ghost" size="sm" onClick={togglePosition}>
                 <ArrowLeftRight className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+              <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -121,7 +126,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
           </Button>
         </div>
       </motion.div>
-      
+
       {/* Animate the Sidebar Toggle Button */}
       <AnimatePresence>
         {!isOpen && (
@@ -134,7 +139,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
             <Button
               variant="secondary"
               size="sm"
-              onClick={toggleSidebar}
+              onClick={onClose}
               className={`${position === 'left' ? 'rounded-r' : 'rounded-l'}`}
             >
               {position === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -146,8 +151,8 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
       {/* Category Popup */}
       <CategoryPopup
         isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        onAddEntry={onAddEntry}
+        onClose={handleClosePopup} // Pass the actual close handler
+        onAddEntry={handleAddEntry} // Passing the correct handle function
       />
     </>
   );

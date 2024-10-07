@@ -1,4 +1,4 @@
-// In types.ts
+// In types/types.ts
 export interface CodexEntry {
     id: string;
     category: string;
@@ -6,8 +6,18 @@ export interface CodexEntry {
     content: string;
     name: string;
     description: string;
+    
   }
   
+  export type CodexSidebarProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    onAddEntry: (entry: Omit<CodexEntry, 'id'>) => void;  // Function to handle adding entries
+    bookId: string;  // ID of the book the codex is associated with
+    entries: CodexEntry[];
+  
+  };
+
   export interface TextEditorProps {
     bookId: string;
     content: string;

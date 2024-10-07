@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe } from 'react-icons/fa';
 
 interface CategoryPopupProps {
@@ -12,92 +11,76 @@ interface CategoryPopupProps {
   onAddEntry: (entry: { category: string; title: string; content: string }) => void;
 }
 
-const categories = [
-  { name: 'Characters', icon: FaUser },
-  { name: 'Locations', icon: FaMapMarkerAlt },
-  { name: 'Events', icon: FaCalendarAlt },
-  { name: 'Items', icon: FaCube },
-  { name: 'Notes', icon: FaStickyNote },
-  { name: 'World Building', icon: FaGlobe },
-];
-
 const CategoryPopup: React.FC<CategoryPopupProps> = ({ isOpen, onClose, onAddEntry }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Characters');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedCategory) {
-      onAddEntry({ category: selectedCategory, title, content });
-      setSelectedCategory(null);
+  const categories = [
+    { name: 'Characters', icon: FaUser },
+    { name: 'Locations', icon: FaMapMarkerAlt },
+    { name: 'Events', icon: FaCalendarAlt },
+    { name: 'Items', icon: FaCube },
+    { name: 'Notes', icon: FaStickyNote },
+    { name: 'World Building', icon: FaGlobe },
+  ];
+
+  const handleAddEntry = () => {
+    if (title.trim() && content.trim()) {
+      onAddEntry({
+        category: selectedCategory,
+        title,
+        content,
+      });
       setTitle('');
       setContent('');
+      onClose();
     }
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-card p-6 rounded-lg shadow-xl w-full max-w-4xl"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Add to Codex</h2>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
-            {!selectedCategory ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {categories.map((category) => (
-                  <Button
-                    key={category.name}
-                    onClick={() => setSelectedCategory(category.name)}
-                    className="h-32 flex flex-col items-center justify-center text-lg"
-                  >
-                    <category.icon className="h-8 w-8 mb-2" />
-                    {category.name}
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <h3 className="text-xl font-semibold">{selectedCategory}</h3>
-                <Input
-                  placeholder="Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-                <Textarea
-                  placeholder="Content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  required
-                  rows={5}
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setSelectedCategory(null)}>
-                    Back
-                  </Button>
-                  <Button type="submit">Add Entry</Button>
-                </div>
-              </form>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Entry</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+            className="w-full"
+          />
+          <Input
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Content"
+            className="w-full"
+          />
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-gray-200">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.name} value={category.name}>
+                  <category.icon className="h-4 w-4 mr-2" />
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose} variant="ghost">
+            Cancel
+          </Button>
+          <Button onClick={handleAddEntry}>
+            Add Entry
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import * as db from '@/lib/db';
+import { getBookById, getAllBooks, createBook, updateBook, deleteBook } from '@/lib/db'; // Ensure these functions exist in db
 
+// GET request handler for fetching books.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   try {
     if (id) {
-      const book = await db.getBookById(Number(id));
+      const book = await getBookById(Number(id));
       return NextResponse.json(book);
     } else {
-      const books = await db.getAllBooks();
+      const books = await getAllBooks();
       return NextResponse.json(books);
     }
   } catch (error) {
@@ -19,10 +20,11 @@ export async function GET(request: Request) {
   }
 }
 
+// POST request handler for creating a new book.
 export async function POST(request: Request) {
   try {
     const book = await request.json();
-    const newBookId = await db.createBook(book);
+    const newBookId = await createBook(book);
     return NextResponse.json({ id: newBookId });
   } catch (error) {
     console.error('Error creating book:', error);
@@ -30,10 +32,11 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT request handler for updating an existing book.
 export async function PUT(request: Request) {
   try {
     const book = await request.json();
-    await db.updateBook(book);
+    await updateBook(book);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating book:', error);
@@ -41,13 +44,14 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE request handler for deleting a book.
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   if (id) {
     try {
-      await db.deleteBook(Number(id));
+      await deleteBook(Number(id));
       return NextResponse.json({ success: true });
     } catch (error) {
       console.error('Error deleting book:', error);
