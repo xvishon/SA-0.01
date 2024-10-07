@@ -1,0 +1,28 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": [
+      "lucide",
+      "tiptap",
+      "Ollama",
+      "tanstack",
+      "tailwindcss",
+      "clsx",
+      "pangea",
+      "nsis",
+      "uuidv",
+      "codestral",
+      "Codstral",
+      "vuiq",
+      "Hjxn",
+      "gejnk",
+      "Epua",
+      "pvmvs"
+    ],
+    "ignorePaths": [
+      "node_modules/**",
+      "dist/**",
+      ".next/**",
+      "build/**"
+    ]
+  }

@@ -26,7 +26,13 @@ export default function EditPage() {
         />
         <Button onClick={handleSave}>Save</Button>
       </div>
-      <TextEditor content={content} setContent={setContent} />
+      <TextEditor 
+      bookId={1}
+      initialContent={content}
+      content={content} 
+      setContent={setContent} 
+      onContentChange={(newContent) => setContent(newContent)}
+      />
     </div>
   );
 }

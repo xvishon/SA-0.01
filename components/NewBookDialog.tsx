@@ -1,5 +1,5 @@
-"use client"
-
+"use client";
+import React from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,15 +20,26 @@ export default function NewBookDialog() {
   const [author, setAuthor] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { addBook } = useBookContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addBook({ title, author, coverUrl, content: '' });
-    setTitle('');
-    setAuthor('');
-    setCoverUrl('');
-    setOpen(false);
+    setLoading(true);
+    setError(null);
+
+    try {
+      await addBook({ title, author, coverUrl, content: '' });
+      setTitle('');
+      setAuthor('');
+      setCoverUrl('');
+      setOpen(false);
+    } catch (err) {
+      setError('Failed to add the book. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,8 +93,11 @@ export default function NewBookDialog() {
               />
             </div>
           </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <DialogFooter>
-            <Button type="submit">Add Book</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Adding...' : 'Add Book'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

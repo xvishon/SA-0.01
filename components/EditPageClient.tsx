@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import * as db from '@/lib/db';
 import { useSettings } from '@/contexts/SettingsContext';
 import CodexSidebar from '@/components/CodexSidebar';
+import { CodexEntry } from '@/types/types'; // Import CodexEntry type
 
 const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
   const router = useRouter();
@@ -19,7 +20,8 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const { pageWidth } = useSettings();
-  const [codexEntries, setCodexEntries] = useState([]);
+  const [codexEntries, setCodexEntries] = useState<CodexEntry[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: book, isLoading, error } = useQuery(['book', params.id], () => db.getBookById(Number(params.id)), {
     onSuccess: (data) => {
@@ -33,12 +35,16 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
 
   const updateMutation = useMutation(updateBook, {
     onSuccess: () => {
-      // Optionally show a success message
+      setIsSaving(false);
+    },
+    onError: () => {
+      setIsSaving(false);
     },
   });
 
   const handleSave = useCallback(() => {
     if (currentBook) {
+      setIsSaving(true);
       const updatedBook = { ...currentBook, title, content };
       updateMutation.mutate(updatedBook);
     }
@@ -46,13 +52,18 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
 
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
-  }, []);
+    if (currentBook) {
+      setCurrentBook({ ...currentBook, content: newContent });
+    }
+  }, [currentBook, setCurrentBook]);
 
   const handleAddCodexEntry = useCallback((newEntry: Omit<CodexEntry, 'id'>) => {
-    // Here you would typically call an API to add the entry to the database
-    // For now, we'll just add it to the local state
-    const entryWithId = { ...newEntry, id: Date.now().toString() };
-    setCodexEntries(prevEntries => [...prevEntries, entryWithId]);
+    if (newEntry.name && newEntry.description) {
+      const entryWithId = { ...newEntry, id: Date.now().toString() };
+      setCodexEntries(prevEntries => [...prevEntries, entryWithId]);
+    } else {
+      console.error("New entry must have a name and description");
+    }
   }, []);
 
   useEffect(() => {
@@ -68,7 +79,7 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
   }, [handleSave]);
 
   if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {(error as any)?.message || "An unknown error occurred"}</div>;
   if (!book) return <div>Book not found</div>;
 
   return (
@@ -80,24 +91,25 @@ const EditPageClient: React.FC<{ params: { id: string } }> = ({ params }) => {
           onChange={(e) => setTitle(e.target.value)}
           className="text-2xl font-bold w-1/2"
         />
-        <div className="space-x-2">
-          <Button onClick={handleSave}>
+
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            Save
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
-          <NewBookDialog>
-            <Button variant="outline">
-              <BookPlus className="h-4 w-4 mr-2" />
-              New Book
-            </Button>
-          </NewBookDialog>
+
+          <NewBookDialog /> {/* Use this directly */}
         </div>
       </div>
+
       <TextEditor
         bookId={book.id!}
         initialContent={content}
+        content={content}
+        setContent={setContent}
         onContentChange={handleContentChange}
       />
+
       <CodexSidebar
         bookId={params.id}
         entries={codexEntries}

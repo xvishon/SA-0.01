@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,13 +7,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ChevronLeft, ChevronRight, Search, X, Plus, ArrowLeftRight, Filter } from 'lucide-react';
 import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe } from 'react-icons/fa';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface CodexEntry {
-  id: string;
-  category: string;
-  title: string;
-  content: string;
-}
+import CategoryPopup from './CategoryPopup';
+import { CodexEntry } from '@/types/types';
 
 interface CodexSidebarProps {
   bookId: string;
@@ -26,6 +22,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const categories = [
     { name: 'Characters', icon: FaUser },
@@ -48,17 +45,9 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
     (selectedCategory === 'all' || entry.category === selectedCategory)
   );
 
-  const handleAddEntry = () => {
-    const newEntry: Omit<CodexEntry, 'id'> = {
-      category: selectedCategory === 'all' ? 'Notes' : selectedCategory,
-      title: 'New Entry',
-      content: 'Enter your content here...',
-    };
-    onAddEntry(newEntry);
-  };
-
   return (
     <>
+      {/* Sidebar UI */}
       <motion.div
         ref={sidebarRef}
         initial={{ x: position === 'right' ? '100%' : '-100%' }}
@@ -127,11 +116,13 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
               </AccordionItem>
             ))}
           </Accordion>
-          <Button onClick={handleAddEntry} className="w-full">
+          <Button onClick={() => setIsPopupOpen(true)} className="w-full">
             <Plus className="h-4 w-4 mr-2" /> Add Entry
           </Button>
         </div>
       </motion.div>
+      
+      {/* Animate the Sidebar Toggle Button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
@@ -151,6 +142,13 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ bookId, entries, onAddEntry
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Category Popup */}
+      <CategoryPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        onAddEntry={onAddEntry}
+      />
     </>
   );
 };
