@@ -1,115 +1,105 @@
-"use client";
-
-// Import necessary hooks and libraries
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit"; // Basic text editing features like bold, italic, etc.
-import Placeholder from "@tiptap/extension-placeholder"; // Placeholder text extension
-import { Button } from "@/components/ui/button"; // Custom button component
-import debounce from "lodash/debounce"; // Utility library to optimize performance
-import { Bold, Italic, Strikethrough, Eraser } from "lucide-react"; // Icons for formatting buttons
-import { useSettings } from "@/contexts/SettingsContext"; // Custom hook for accessing settings
-import OllamaIntegration from "./OllamaIntegration"; // Custom component for AI integration
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import { Button } from "@/components/ui/button";
+import { debounce } from "lodash";
+import { Bold, Italic, Strikethrough, Eraser } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
+import OllamaIntegration from "./OllamaIntegration";
 
-// Define the props that the TextEditor component will receive
 interface TextEditorProps {
-  bookId: number; // The ID of the book being edited
-  initialContent: string; // The initial content of the editor
-  content: string; // The actual content of the editor
+  bookId: number;
+  initialContent: string;
+  content: string;
   setContent: React.Dispatch<React.SetStateAction<string>>;
-  onContentChange: (content: string) => void; // Callback to notify the parent component when content changes
+  onContentChange: (content: string) => void;
 }
 
-const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onContentChange }) => {
-  // State to manage the current content of the editor
+const TextEditor: React.FC<TextEditorProps> = ({
+  bookId,
+  initialContent,
+  onContentChange,
+}) => {
   const [content, setContent] = useState(initialContent);
-  
-  // Access the settings using a custom hook, here we're checking if AI is available
   const { isOllamaAvailable } = useSettings();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Function to handle AI-generated content (if AI is available)
   const handleAIContinue = async (model: string) => {
     if (editor) {
-      const currentContent = editor.getText(); // Get the current text content from the editor
+      const currentContent = editor.getText();
       try {
-        // Send a request to the API to generate more content using AI
         const response = await fetch("/api/ollama", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: model, // AI model to use
-            prompt: currentContent, // Pass the current content as a prompt
+            model: model,
+            prompt: currentContent,
             stream: false,
           }),
         });
 
-        const data = await response.json(); // Get the response data
+        const data = await response.json();
         if (data.response) {
-          // If the AI returns content, append it to the editor's content
           editor.commands.setContent(currentContent + " " + data.response);
-          setContent(editor.getHTML()); // Update the state with new content
+          setContent(editor.getHTML());
+          setErrorMessage(null); // Clear error message on success
         }
       } catch (error) {
-        console.error("Error generating content with Ollama:", error); // Log any errors
+        console.error("Error generating content with Ollama:", error);
+        setErrorMessage("Failed to generate content: Failed to generate content with Ollama. Make sure Ollama is running locally."); // Set error message
       }
     }
   };
 
-  // Callback to update the local content and notify the parent component about the change
   const handleContentUpdate = useCallback(
     (newContent: string) => {
-      setContent(newContent); // Update local state
-      onContentChange(newContent); // Notify the parent about the content change
+      setContent(newContent);
+      onContentChange(newContent);
     },
-    [onContentChange] // Only recreate this function when `onContentChange` changes
+    [onContentChange]
   );
 
-  // Debounce the content update to avoid frequent updates, improving performance
   const debouncedContentUpdate = useMemo(
-    () => debounce(handleContentUpdate, 300), // Debounce for 300ms
+    () => debounce(handleContentUpdate, 300),
     [handleContentUpdate]
   );
 
-  // Initialize the editor with the required extensions and content
   const editor = useEditor({
     extensions: [
-      StarterKit, // Includes basic text editing features like bold, italic, etc.
+      StarterKit,
       Placeholder.configure({
-        placeholder: "Start writing your magical tome...", // Placeholder text for the editor
+        placeholder: "Start writing your magical tome...",
       }),
     ],
-    content: content, // Use the state variable for content
+    content: content,
     onUpdate: ({ editor }) => {
-      // This function is called whenever the editor content changes
-      debouncedContentUpdate(editor.getHTML()); // Debounce the update to avoid performance issues
+      debouncedContentUpdate(editor.getHTML());
     },
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none", // Custom classes for styling the editor
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none",
       },
     },
-    immediatelyRender: false, // Prevent immediate rendering of the editor's content
+    immediatelyRender: false,
   });
 
-  // Effect to update the editor's content when `initialContent` changes
   useEffect(() => {
     if (editor && initialContent !== editor.getHTML()) {
-      editor.commands.setContent(initialContent, false); // Update the editor's content
-      setContent(initialContent); // Update the state
+      editor.commands.setContent(initialContent, false);
+      setContent(initialContent);
     }
-  }, [initialContent, editor]); // Only run this effect when `initialContent` or `editor` changes
+  }, [initialContent, editor]);
 
-  // If the editor hasn't been initialized yet, return null (this prevents rendering errors)
   if (!editor) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {/* The main editor component where users can type */}
       <div className="border border-input bg-background/50 rounded-md p-4">
         <EditorContent
           editor={editor}
@@ -117,10 +107,8 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
         />
       </div>
 
-      {/* Formatting buttons like Bold, Italic, etc. */}
       <div className="flex justify-between items-center flex-wrap gap-2">
         <div className="flex space-x-2">
-          {/* Button for bold text */}
           <Button
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={editor.isActive("bold") ? "is-active" : ""}
@@ -128,7 +116,6 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
             <Bold className="h-4 w-4" />
           </Button>
 
-          {/* Button for italic text */}
           <Button
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={editor.isActive("italic") ? "is-active" : ""}
@@ -136,7 +123,6 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
             <Italic className="h-4 w-4" />
           </Button>
 
-          {/* Button for strikethrough text */}
           <Button
             onClick={() => editor.chain().focus().toggleStrike().run()}
             className={editor.isActive("strike") ? "is-active" : ""}
@@ -144,20 +130,24 @@ const TextEditor: React.FC<TextEditorProps> = ({ bookId, initialContent, onConte
             <Strikethrough className="h-4 w-4" />
           </Button>
 
-          {/* Button to remove all formatting */}
           <Button onClick={() => editor.chain().focus().unsetAllMarks().run()}>
             <Eraser className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Integration for AI content generation */}
-        <OllamaIntegration 
-        content={content} 
-        onContinue={handleAIContinue} />
+        <OllamaIntegration
+          content={content}
+          onContinue={handleAIContinue}
+        />
       </div>
+
+      {errorMessage && (
+        <div className="text-yellow-500 font-bold mt-4">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 };
 
-// Use React.memo to optimize rendering performance (only re-render when props change)
 export default React.memo(TextEditor);
