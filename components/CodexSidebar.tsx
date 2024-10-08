@@ -1,14 +1,15 @@
-import React, { useRef, useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ChevronLeft, ChevronRight, Search, X, Plus, ArrowLeftRight, Filter } from 'lucide-react';
-import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe } from 'react-icons/fa';
+import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe, FaBook, FaMagic } from 'react-icons/fa';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CategoryPopup from './CategoryPopup';
 import { CodexSidebarProps } from '@/types/types';
 import { debounce } from 'lodash';
+import { ResizableBox } from 'react-resizable';
+import 'react-resizable/css/styles.css';
 
 const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, entries = [], onAddEntry }) => {
   const [position, setPosition] = useState<'left' | 'right'>('right');
@@ -16,6 +17,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [width, setWidth] = useState(320);
 
   const debouncedSearchTerm = useMemo(() => debounce(setSearchTerm, 300), []);
 
@@ -26,6 +28,8 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
     { name: 'Items', icon: FaCube },
     { name: 'Notes', icon: FaStickyNote },
     { name: 'World Building', icon: FaGlobe },
+    { name: 'References', icon: FaBook },
+    { name: 'Custom', icon: FaMagic },
   ];
 
   const togglePosition = () => {
@@ -43,8 +47,8 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
       category: entry.category,
       title: entry.title,
       content: entry.content,
-      name: entry.title, // Providing name
-      description: entry.content.substring(0, 50), // Providing description as first 50 characters of content
+      name: entry.title,
+      description: entry.content.substring(0, 50),
     });
   };
 
@@ -54,23 +58,30 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
 
   return (
     <>
-      {/* Sidebar UI */}
-      <motion.div
-        ref={sidebarRef}
-        initial={{ x: position === 'right' ? '100%' : '-100%' }}
-        animate={{ x: isOpen ? 0 : (position === 'right' ? '100%' : '-100%') }}
-        transition={{ duration: 0.3 }}
-        className={`fixed top-0 ${position}-0 w-80 h-full bg-gray-900 text-white overflow-y-auto z-50`}
+      <ResizableBox
+        width={width}
+        height={window.innerHeight}
+        minConstraints={[200, Infinity]}
+        maxConstraints={[500, Infinity]}
+        handle={<div className="resize-handle" />}
+        resizeHandles={['e']}
+        onResizeStop={(e, data) => {
+          setWidth(data.size.width);
+        }}
+        className={`fixed top-0 ${position}-0 h-full bg-gray-900 text-white overflow-y-auto z-50`}
         style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}
       >
-        <div className="p-4 space-y-4">
+        <div
+          ref={sidebarRef}
+          className={`p-4 space-y-4 ${isOpen ? '' : (position === 'right' ? 'translate-x-full' : '-translate-x-full')}`}
+        >
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Codex</h2>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={togglePosition}>
+              <Button variant="ghost" size="sm" onClick={togglePosition} aria-label="Toggle Position">
                 <ArrowLeftRight className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={onClose}>
+              <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close Sidebar">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -80,10 +91,11 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
               type="text"
               placeholder="Search entries..."
               value={searchTerm}
-              onChange={(e) => debouncedSearchTerm(e.target.value)} // Use debounced function
+              onChange={(e) => debouncedSearchTerm(e.target.value)}
               className="flex-grow"
+              aria-label="Search Entries"
             />
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Search">
               <Search className="h-4 w-4" />
             </Button>
           </div>
@@ -127,34 +139,23 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
             <Plus className="h-4 w-4 mr-2" /> Add Entry
           </Button>
         </div>
-      </motion.div>
+      </ResizableBox>
 
-      {/* Animate the Sidebar Toggle Button */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={`fixed ${position}-0 top-1/2 transform -translate-y-1/2 z-50`}
-          >
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onClose}
-              className={`${position === 'left' ? 'rounded-r' : 'rounded-l'}`}
-            >
-              {position === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {!isOpen && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onClose}
+          className={`fixed ${position}-0 top-1/2 transform -translate-y-1/2 z-50 ${position === 'left' ? 'rounded-r' : 'rounded-l'}`}
+        >
+          {position === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      )}
 
-      {/* Category Popup */}
       <CategoryPopup
         isOpen={isPopupOpen}
-        onClose={handleClosePopup} // Pass the actual close handler
-        onAddEntry={handleAddEntry} // Passing the correct handle function
+        onClose={handleClosePopup}
+        onAddEntry={handleAddEntry}
       />
     </>
   );
