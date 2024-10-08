@@ -1,4 +1,5 @@
 import React, { useRef, useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -8,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import CategoryPopup from './CategoryPopup';
 import { CodexSidebarProps } from '@/types/types';
 import { debounce } from 'lodash';
-import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 
 const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, entries = [], onAddEntry }) => {
@@ -17,7 +17,6 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [width, setWidth] = useState(320);
 
   const debouncedSearchTerm = useMemo(() => debounce(setSearchTerm, 300), []);
 
@@ -58,23 +57,15 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
 
   return (
     <>
-      <ResizableBox
-        width={width}
-        height={window.innerHeight}
-        minConstraints={[200, Infinity]}
-        maxConstraints={[500, Infinity]}
-        handle={<div className="resize-handle" />}
-        resizeHandles={['e']}
-        onResizeStop={(e, data) => {
-          setWidth(data.size.width);
-        }}
-        className={`fixed top-0 ${position}-0 h-full bg-gray-900 text-white overflow-y-auto z-50`}
+      <motion.div
+        ref={sidebarRef}
+        initial={{ x: position === 'right' ? '100%' : '-100%' }}
+        animate={{ x: isOpen ? 0 : (position === 'right' ? '100%' : '-100%') }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }} // Updated transition
+        className={`fixed top-0 ${position}-0 w-80 h-full bg-gray-900 text-white overflow-y-auto z-50`}
         style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}
       >
-        <div
-          ref={sidebarRef}
-          className={`p-4 space-y-4 ${isOpen ? '' : (position === 'right' ? 'translate-x-full' : '-translate-x-full')}`}
-        >
+        <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Codex</h2>
             <div className="flex items-center space-x-2">
@@ -91,7 +82,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
               type="text"
               placeholder="Search entries..."
               value={searchTerm}
-              onChange={(e) => debouncedSearchTerm(e.target.value)}
+              onChange={(e) => debouncedSearchTerm(e.target.value)} // Use debounced function
               className="flex-grow"
               aria-label="Search Entries"
             />
@@ -139,19 +130,30 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
             <Plus className="h-4 w-4 mr-2" /> Add Entry
           </Button>
         </div>
-      </ResizableBox>
+      </motion.div>
 
-      {!isOpen && (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onClose}
-          className={`fixed ${position}-0 top-1/2 transform -translate-y-1/2 z-50 ${position === 'left' ? 'rounded-r' : 'rounded-l'}`}
-        >
-          {position === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      )}
+      {/* Animate the Sidebar Toggle Button */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`fixed ${position}-0 top-1/2 transform -translate-y-1/2 z-50`}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onClose}
+              className={`${position === 'left' ? 'rounded-r' : 'rounded-l'}`}
+            >
+              {position === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Category Popup */}
       <CategoryPopup
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
