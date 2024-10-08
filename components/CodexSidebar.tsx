@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { FaUser, FaMapMarkerAlt, FaCalendarAlt, FaCube, FaStickyNote, FaGlobe } 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CategoryPopup from './CategoryPopup';
 import { CodexSidebarProps } from '@/types/types';
+import { debounce } from 'lodash';
 
 const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, entries = [], onAddEntry }) => {
   const [position, setPosition] = useState<'left' | 'right'>('right');
@@ -15,6 +16,8 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  const debouncedSearchTerm = useMemo(() => debounce(setSearchTerm, 300), []);
 
   const categories = [
     { name: 'Characters', icon: FaUser },
@@ -45,7 +48,6 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
     });
   };
 
-  // Implement the onClose logic to properly close the popup
   const handleClosePopup = () => {
     setIsPopupOpen(false);
   };
@@ -78,7 +80,7 @@ const CodexSidebar: React.FC<CodexSidebarProps> = ({ isOpen, onClose, bookId, en
               type="text"
               placeholder="Search entries..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => debouncedSearchTerm(e.target.value)} // Use debounced function
               className="flex-grow"
             />
             <Button variant="ghost" size="sm">
